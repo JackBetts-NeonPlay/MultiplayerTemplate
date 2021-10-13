@@ -44,7 +44,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dontDestroyOnLoad: 1
-  objectPools:
-  - key: Impact
-    prefab: {fileID: 1121720008627182, guid: baa82f50e0326437586da6eaf54b59d1, type: 3}
-    poolSize: 15
+  objectPools: []

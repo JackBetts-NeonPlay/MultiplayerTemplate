@@ -7,6 +7,7 @@ using Photon.Pun.UtilityScripts;
 using Photon.Realtime;
 using UnityEngine.SceneManagement;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
+using Random = UnityEngine.Random;
 
 namespace Game 
 {
@@ -22,6 +23,10 @@ namespace Game
         [Header("Matchmaking Settings")] 
         [SerializeField] private byte desiredRoomPlayers;
         public string gameSceneName, menuSceneName;
+
+        private bool _attemptingJoinPrivateGame; 
+
+        private const string KNicknameKey = "nickname"; 
         
         public int GetPlayersTeam(Player player)
         {
@@ -47,7 +52,8 @@ namespace Game
         {
             PhotonNetwork.ConnectUsingSettings();
             PhotonNetwork.AutomaticallySyncScene = true;
-
+            PhotonNetwork.NickName = PlayerPrefs.GetString(KNicknameKey, "Nickname"); 
+            
             StartCoroutine(CoLoadMainMenu()); 
         }
 
@@ -59,6 +65,7 @@ namespace Game
 
         public void SetPlayerNickname(string nickname)
         {
+            PlayerPrefs.SetString(KNicknameKey, nickname);
             PhotonNetwork.NickName = nickname; 
         }
 
@@ -70,15 +77,67 @@ namespace Game
             PhotonNetwork.JoinRandomRoom();
         }
 
+        public void JoinGameWithCode(string gameCode)
+        {
+            _attemptingJoinPrivateGame = true; 
+            PhotonNetwork.JoinRoom(gameCode); 
+            UiManager.Instance.OpenMenu("Lobby");
+        }
+
+        public void CreateCodedGame()
+        {
+            StartedCreatingGame?.Invoke();
+            string randomCode = GenerateRandomCode(4);
+
+            Hashtable roomProps = new Hashtable()
+            {
+                { "isPrivateGame" , true },
+                { "roomCode", randomCode }
+            };
+            
+            RoomOptions options = new RoomOptions
+            {
+                IsVisible = false,
+                IsOpen = true,
+                MaxPlayers = desiredRoomPlayers,
+                CustomRoomProperties = roomProps
+            };
+            
+            Debug.Log($"{this} : Creating Private Game with code - {randomCode}");
+            PhotonNetwork.CreateRoom(randomCode, options); 
+            UiManager.Instance.OpenMenu("Lobby");
+        }
+
+        private string _codeCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"; 
+        private string GenerateRandomCode(int codeLength)
+        {
+            string code = "";
+            for (int i = 0; i < codeLength; i++)
+            {
+                code += _codeCharacters[Random.Range(0, _codeCharacters.Length)]; 
+            }
+
+            return code; 
+        }
+
         public void CreateGame()
         {
             StartedCreatingGame?.Invoke();
-            RoomOptions roomOptions = new RoomOptions();
-            roomOptions.IsVisible = true;
-            roomOptions.IsOpen = true;
-            roomOptions.MaxPlayers = desiredRoomPlayers;
+            
+            Hashtable roomProps = new Hashtable()
+            {
+                { "isPrivateGame" , false } 
+            };
+            
+            RoomOptions options = new RoomOptions
+            {
+                IsVisible = false,
+                IsOpen = true,
+                MaxPlayers = desiredRoomPlayers,
+                CustomRoomProperties = roomProps
+            };
 
-            PhotonNetwork.CreateRoom(null, roomOptions);
+            PhotonNetwork.CreateRoom(null, options);
         }
 
         public void OnRoomFilled()
@@ -151,6 +210,8 @@ namespace Game
                 SetupPlayerTeams();
             }
 
+            _attemptingJoinPrivateGame = false; 
+
             base.OnJoinedRoom();
         }
 
@@ -162,6 +223,14 @@ namespace Game
 
         public override void OnJoinRoomFailed(short returnCode, string message)
         {
+            if (_attemptingJoinPrivateGame)
+            {
+                Debug.Log($"{this} : Failed to join room with code");
+                _attemptingJoinPrivateGame = false; 
+                UiManager.Instance.OpenMenu("PlayWithFriends");
+                return; 
+            }
+
             Debug.Log($"{this} - Join Room Failed - Will attempt creating room");
             CreateGame();
             

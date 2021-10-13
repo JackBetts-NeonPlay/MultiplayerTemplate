@@ -33,6 +33,7 @@ public abstract class SingletonPunBehaviour<T> : MonoBehaviourPunCallbacks
 
         if (photonView != null)
         {
+            photonView.ViewID = 0; 
             photonView.ViewID = PhotonViewIdSelector.GetId(); 
         }
     }

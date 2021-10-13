@@ -15,13 +15,11 @@ namespace Game
 
         public override void OnEnable()
         {
-
             base.OnEnable();
         }
 
         public override void OnDisable()
         {
-
             base.OnDisable();
         }
 
