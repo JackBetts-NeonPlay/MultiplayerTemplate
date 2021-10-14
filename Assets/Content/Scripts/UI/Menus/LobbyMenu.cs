@@ -91,7 +91,28 @@ namespace Game
 
         private void UpdateLobbyUi()
         {
-            infoText.text = $"{PhotonNetwork.CurrentRoom.PlayerCount} / {PhotonNetwork.CurrentRoom.MaxPlayers} \n Players"; 
+            infoText.text = $"{PhotonNetwork.CurrentRoom.PlayerCount} / {PhotonNetwork.CurrentRoom.MaxPlayers}"; 
+        }
+
+        public override void OnMenuClosed()
+        {
+            base.OnMenuClosed();
+            ResetLobbyUi();
+        }
+
+        private void ResetLobbyUi()
+        {
+            infoText.text = "0 / 0"; 
+            for(int i = 0; i < playerNames.Length; i++)
+            {
+                playerNames[i].text = "";
+            }
+        }
+
+        public void LeaveButtonPressed()
+        {
+            if (!PhotonNetwork.InRoom) return;
+            PhotonNetwork.LeaveRoom(); 
         }
     }
 }
