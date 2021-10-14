@@ -18,7 +18,10 @@ namespace Game
         public static Action JoinGameFailed;
         public static Action JoinGameSuccess;
         public static Action LoadingGameScene;
-        public static Action LoadingMainMenu; 
+        public static Action LoadingMainMenu;
+
+        public static string K_IsPrivateKey = "isPrivateGame";
+        public static string K_RoomCodeKey = "roomCode";  
 
         [Header("Matchmaking Settings")] 
         [SerializeField] private byte desiredRoomPlayers;
@@ -91,8 +94,8 @@ namespace Game
 
             Hashtable roomProps = new Hashtable()
             {
-                { "isPrivateGame" , true },
-                { "roomCode", randomCode }
+                { K_IsPrivateKey , true },
+                { K_RoomCodeKey, randomCode }
             };
             
             RoomOptions options = new RoomOptions
@@ -126,7 +129,7 @@ namespace Game
             
             Hashtable roomProps = new Hashtable()
             {
-                { "isPrivateGame" , false } 
+                { K_IsPrivateKey , false } 
             };
             
             RoomOptions options = new RoomOptions

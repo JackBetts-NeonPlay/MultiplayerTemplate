@@ -10,6 +10,9 @@ namespace Game
 {
     public class LobbyMenu : Menu
     {
+        [SerializeField] private GameObject roomCodeObject;
+        [SerializeField] private TMP_Text roomCodeText; 
+        [Space]
         [SerializeField] private TMP_Text infoText;
         [SerializeField] private TMP_Text[] playerNames; 
 
@@ -26,7 +29,30 @@ namespace Game
         public override void OnJoinedRoom()
         {
             OpenInLobbyUi();
+            CheckHasRoomCode();
             base.OnJoinedRoom();
+        }
+
+        private void CheckHasRoomCode()
+        {
+            bool isPrivateGame = (bool) PhotonNetwork.CurrentRoom.CustomProperties[NetworkManager.K_IsPrivateKey];
+            roomCodeObject.SetActive(isPrivateGame);
+            
+            if (!isPrivateGame) return;
+
+            string roomCode = (string) PhotonNetwork.CurrentRoom.CustomProperties[NetworkManager.K_RoomCodeKey];
+            roomCodeText.text = roomCode;
+        }
+
+        public void CopyRoomCodePressed()
+        {
+            TextEditor editor = new TextEditor
+            {
+                text = roomCodeText.text
+            }; 
+            
+            editor.SelectAll();
+            editor.Copy();
         }
 
         public override void OnPlayerEnteredRoom(Player newPlayer)
