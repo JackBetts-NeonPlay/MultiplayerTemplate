@@ -46,6 +46,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dontDestroyOnLoad: 1
   desiredRoomPlayers: 4
+  lobbyCountdown: -1
   gameSceneName: Game
   menuSceneName: MainMenu
 --- !u!114 &3636770282652102901

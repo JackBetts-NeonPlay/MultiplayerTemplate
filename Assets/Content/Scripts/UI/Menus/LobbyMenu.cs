@@ -14,20 +14,43 @@ namespace Game
         [SerializeField] private TMP_Text roomCodeText; 
         [Space]
         [SerializeField] private TMP_Text infoText;
-        [SerializeField] private TMP_Text[] playerNames; 
+        [SerializeField] private TMP_Text[] playerNames;
+        [SerializeField] private TMP_Text countdownText; 
+        
+        private int _countdown = 10;
+        private float _lastCountdownUpdateTime; 
 
-        public override void OnEnable()
+        private void Update()
         {
-            base.OnEnable();
+            if (PhotonNetwork.InRoom && NetworkManager.Instance.lobbyCountdown != -1)
+            {
+                UpdateCountdownTimer();
+            }
         }
 
-        public override void OnDisable()
+        private void UpdateCountdownTimer()
         {
-            base.OnDisable();
+            if (PhotonNetwork.IsMasterClient)
+            {
+                if (_countdown <= 0) return; 
+                if (Time.time > _lastCountdownUpdateTime + 1)
+                {
+                    _lastCountdownUpdateTime = Time.time;
+                    _countdown--;
+                    PhotonNetwork.CurrentRoom.CustomProperties[NetworkManager.K_CountdownKey] = _countdown;
+                }
+            }
+            else
+            {
+                _countdown = (int) PhotonNetwork.CurrentRoom.CustomProperties[NetworkManager.K_CountdownKey]; 
+            }
+
+            countdownText.text = _countdown.ToString(); 
         }
 
         public override void OnJoinedRoom()
         {
+            _lastCountdownUpdateTime = Time.time; 
             OpenInLobbyUi();
             CheckHasRoomCode();
             base.OnJoinedRoom();
@@ -92,6 +115,20 @@ namespace Game
         private void UpdateLobbyUi()
         {
             infoText.text = $"{PhotonNetwork.CurrentRoom.PlayerCount} / {PhotonNetwork.CurrentRoom.MaxPlayers}"; 
+        }
+
+        public override void OnMenuOpened()
+        {
+            base.OnMenuOpened();
+            if (NetworkManager.Instance.lobbyCountdown != -1)
+            {
+                _countdown = NetworkManager.Instance.lobbyCountdown;
+                countdownText.text = _countdown.ToString();
+            }
+            else
+            {
+                countdownText.enabled = false; 
+            }
         }
 
         public override void OnMenuClosed()

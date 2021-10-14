@@ -11,6 +11,7 @@ using Random = UnityEngine.Random;
 
 namespace Game 
 {
+    [RequireComponent(typeof(PhotonView))]
     public class NetworkManager : SingletonPunBehaviour<NetworkManager>
     {
         public static Action StartedSearchingForGame;
@@ -22,9 +23,11 @@ namespace Game
 
         public static string K_IsPrivateKey = "isPrivateGame";
         public static string K_RoomCodeKey = "roomCode";  
+        public static string K_CountdownKey = "countdown";  
 
         [Header("Matchmaking Settings")] 
         [SerializeField] private byte desiredRoomPlayers;
+        public int lobbyCountdown; 
         public string gameSceneName, menuSceneName;
 
         private bool _attemptingJoinPrivateGame; 
@@ -95,7 +98,8 @@ namespace Game
             Hashtable roomProps = new Hashtable()
             {
                 { K_IsPrivateKey , true },
-                { K_RoomCodeKey, randomCode }
+                { K_RoomCodeKey, randomCode },
+                { K_CountdownKey, lobbyCountdown }
             };
             
             RoomOptions options = new RoomOptions
@@ -129,7 +133,8 @@ namespace Game
             
             Hashtable roomProps = new Hashtable()
             {
-                { K_IsPrivateKey , false } 
+                { K_IsPrivateKey , false },
+                { K_CountdownKey, lobbyCountdown }
             };
             
             RoomOptions options = new RoomOptions
