@@ -9,12 +9,14 @@ namespace Game
     {
         private void OnEnable()
         {
-            SceneManager.sceneLoaded += OnSceneLoaded; 
+            SceneManager.sceneLoaded += OnSceneLoaded;
+            GameController.OnGameStateChanged += OnGameStateChanged; 
         }
 
         private void OnDisable()
         {
-            SceneManager.sceneLoaded += OnSceneLoaded; 
+            SceneManager.sceneLoaded -= OnSceneLoaded; 
+            GameController.OnGameStateChanged -= OnGameStateChanged;
         }
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -33,6 +35,14 @@ namespace Game
         {
             OpenMenu("Game");
             SetBackgroundActive(false);
+        }
+
+        private void OnGameStateChanged(GameState state)
+        {
+            if (state == GameState.End)
+            {
+                OpenMenu("Results");
+            }
         }
 
         private void OnLoadingMainMenu()

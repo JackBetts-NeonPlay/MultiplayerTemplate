@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using ExitGames.Client.Photon;
 using Photon.Pun;
+using Photon.Realtime;
 using UnityEngine;
 
 namespace Game
@@ -15,26 +16,33 @@ namespace Game
     }
     
     [RequireComponent(typeof(PhotonView))]
-    public class GameController : MonoBehaviourPun
+    public class GameController : MonoBehaviourPunCallbacks
     {
         public static Action<GameState> OnGameStateChanged;
-        public static Action AllPlayersReady; 
+        public static Action AllPlayersReady;
+
+        public static Player WinningPlayer; 
         
         [SerializeField] private GameObject playerPrefab;
+        [SerializeField] private PlayerSpawnPoints spawnPoints; 
 
         private int _playersReady;
         
         private GameState _state;
         public GameState State => _state;
 
-        private void OnEnable()
+        public override void OnEnable()
         {
-            CountdownTimer.OnCountdownEnded += OnCountdownEnded; 
+            base.OnEnable();
+            CountdownTimer.OnCountdownEnded += OnCountdownEnded;
+            PlayerCollisions.ReachedEnd += OnPlayerReachedEnd; 
         }
 
-        private void OnDisable()
+        public override void OnDisable()
         {
+            base.OnDisable();
             CountdownTimer.OnCountdownEnded -= OnCountdownEnded; 
+            PlayerCollisions.ReachedEnd -= OnPlayerReachedEnd;
         }
 
         private void Start()
@@ -52,15 +60,15 @@ namespace Game
             }
         }
 
-        private void Update()
-        {
-            
-        }
-
         private void SpawnPlayer()
         {
             if (playerPrefab == null) return;
-            PhotonNetwork.Instantiate(nameof(playerPrefab), Vector3.zero, Quaternion.identity); 
+            int playerNum = (int)PhotonNetwork.LocalPlayer.CustomProperties[NetworkManager.K_SpawnPointKey];
+
+            Debug.Log($"Spawn Point {playerNum}");
+            
+            GameObject player = PhotonNetwork.Instantiate(playerPrefab.name, spawnPoints.GetSpawnPoint(playerNum).position, Quaternion.identity); 
+            CameraController.Instance.SetNewTarget(player.transform);
         }
 
         private void ChangeGameState(GameState state)
@@ -92,10 +100,33 @@ namespace Game
             AllPlayersReady?.Invoke();
         }
 
-        public void EndGame()
+        private void OnPlayerReachedEnd(Player player)
         {
+            EndGame(player);
+        }
+
+        public void EndGame(Player wonPlayer)
+        {
+            WinningPlayer = wonPlayer; 
+            ChangeGameState(GameState.End);
+            photonView.RPC(nameof(RpcEndGame), RpcTarget.Others, wonPlayer);
+        }
+
+        [PunRPC]
+        private void RpcEndGame(Player wonPlayer)
+        {
+            Debug.Log($"Ending game because player {wonPlayer.NickName} has Won!");
+            WinningPlayer = wonPlayer;
             ChangeGameState(GameState.End);
         }
-        
+
+        public override void OnPlayerLeftRoom(Player otherPlayer)
+        {
+            base.OnPlayerLeftRoom(otherPlayer);
+            if (PhotonNetwork.CurrentRoom.PlayerCount < 2)
+            {
+                EndGame(PhotonNetwork.LocalPlayer);
+            }
+        }
     }
 }

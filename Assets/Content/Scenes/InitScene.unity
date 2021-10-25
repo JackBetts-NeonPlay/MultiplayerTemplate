@@ -621,6 +621,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3636770282652102899, guid: 3febc2fb86a5e9948b05e931ecf6965e,
         type: 3}
+      propertyPath: playersPerTeam
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3636770282652102899, guid: 3febc2fb86a5e9948b05e931ecf6965e,
+        type: 3}
       propertyPath: desiredRoomPlayers
       value: 2
       objectReference: {fileID: 0}
@@ -738,6 +743,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalRotation.z
       value: -0.0000000076519875
+      objectReference: {fileID: 0}
+    - target: {fileID: 6362037957736521538, guid: c60118766deb9e047a534960dc03431c,
+        type: 3}
+      propertyPath: m_BindingMode
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 6362037957985485120, guid: c60118766deb9e047a534960dc03431c,
         type: 3}

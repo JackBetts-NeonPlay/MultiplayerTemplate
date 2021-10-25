@@ -46,6 +46,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dontDestroyOnLoad: 1
   desiredRoomPlayers: 4
+  playersPerTeam: 2
   lobbyCountdown: -1
   gameSceneName: Game
   menuSceneName: MainMenu

@@ -6,6 +6,7 @@ using Photon.Pun;
 using Photon.Pun.UtilityScripts;
 using Photon.Realtime;
 using UnityEngine.SceneManagement;
+
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 using Random = UnityEngine.Random;
 
@@ -23,10 +24,14 @@ namespace Game
 
         public static string K_IsPrivateKey = "isPrivateGame";
         public static string K_RoomCodeKey = "roomCode";  
-        public static string K_CountdownKey = "countdown";  
+        public static string K_CountdownKey = "countdown";
+        public static string K_SpawnPointKey = "spawnPoint"; 
 
         [Header("Matchmaking Settings")] 
         [SerializeField] private byte desiredRoomPlayers;
+        [SerializeField] private int playersPerTeam;
+        [SerializeField] private Color[] teamColors; 
+        
         public int lobbyCountdown; 
         public string gameSceneName, menuSceneName;
 
@@ -52,6 +57,12 @@ namespace Game
             }
 
             return -1; 
+        }
+
+        public Color GetPlayerTeamColor(Player player)
+        {
+            int team = GetPlayersTeam(player);
+            return teamColors.Length <= team ? teamColors[0] : teamColors[team];
         }
         
         private void Start()
@@ -139,7 +150,7 @@ namespace Game
             
             RoomOptions options = new RoomOptions
             {
-                IsVisible = false,
+                IsVisible = true,
                 IsOpen = true,
                 MaxPlayers = desiredRoomPlayers,
                 CustomRoomProperties = roomProps
@@ -148,7 +159,7 @@ namespace Game
             PhotonNetwork.CreateRoom(null, options);
         }
 
-        public void OnRoomFilled()
+        private void OnRoomFilled()
         {
             Debug.Log($"{this} - Room Filled, master client will start game");
             
@@ -164,17 +175,26 @@ namespace Game
             LoadGameScene();
         }
 
-        public void SetupPlayerTeams()
+        private void SetupPlayerTeams()
         {
             Player[] players = PhotonNetwork.PlayerList;
 
+            int team = 0;
             for(int i = 0; i < players.Length; i++)
             {
                 Hashtable prop = new Hashtable(); 
-                prop.Add(PhotonTeamsManager.TeamPlayerProp, i);
+                
+                prop.Add(PhotonTeamsManager.TeamPlayerProp, team);
+                prop.Add(K_SpawnPointKey, i);
                 
                 bool set = players[i].SetCustomProperties(prop);
-                Debug.Log($"{this} - Custom Props for Player {i} Result - {set}");
+                
+                Debug.Log($"{this} - Set team for player {i} to team {team} Result - {set}");
+
+                if ((i + 1) % playersPerTeam == 0)
+                {
+                    team++; 
+                }
             }
         }
 
@@ -274,16 +294,6 @@ namespace Game
             }
             
             base.OnPlayerEnteredRoom(newPlayer);
-        }
-
-        public override void OnPlayerLeftRoom(Player otherPlayer)
-        {
-            base.OnPlayerLeftRoom(otherPlayer);
-
-            if (PhotonNetwork.CurrentRoom.PlayerCount <= 1)
-            {
-                PhotonNetwork.LeaveRoom(); 
-            }
         }
 
         public override void OnLeftRoom()
